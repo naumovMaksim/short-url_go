@@ -8,6 +8,7 @@ import (
 )
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const defUrl = "http://localhost:8080/"
 
 type Service struct {
 	store *storage.MemoryStorage
@@ -30,7 +31,7 @@ func (s *Service) CreateShortUrl(url string) string {
 	}
 
 	s.store.Set(key, url)
-	return "http://localhost:8080/" + key
+	return defUrl + key
 }
 
 func (s *Service) GetLongUrl(key string) (longUrl string, ok bool) {

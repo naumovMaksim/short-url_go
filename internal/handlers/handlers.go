@@ -62,7 +62,7 @@ func (h *Handler) GetHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := urlPath[1:]
 
-	if len(id) < 1 {
+	if len(id) < 16 {
 		http.Error(w, "Wrong id", http.StatusBadRequest)
 		return
 	}
