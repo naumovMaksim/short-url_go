@@ -4,7 +4,7 @@ import (
 	"math/rand/v2"
 	"strings"
 
-	"github.com/naumovMaksim/short-url_go/short-url_go/internal/storage"
+	"github.com/naumovMaksim/short-url_go/internal/storage"
 )
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

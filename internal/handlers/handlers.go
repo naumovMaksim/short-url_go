@@ -4,7 +4,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/naumovMaksim/short-url_go/short-url_go/internal/service"
+	"github.com/naumovMaksim/short-url_go/internal/service"
 )
 
 type Handler struct {

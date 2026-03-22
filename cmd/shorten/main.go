@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/naumovMaksim/short-url_go/short-url_go/internal/handlers"
-	"github.com/naumovMaksim/short-url_go/short-url_go/internal/service"
-	"github.com/naumovMaksim/short-url_go/short-url_go/internal/storage"
+	"github.com/naumovMaksim/short-url_go/internal/handlers"
+	"github.com/naumovMaksim/short-url_go/internal/service"
+	"github.com/naumovMaksim/short-url_go/internal/storage"
 )
 
 func main() {
