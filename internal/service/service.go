@@ -7,8 +7,11 @@ import (
 	"github.com/naumovMaksim/short-url_go/internal/storage"
 )
 
-const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-const defUrl = "http://localhost:8080/"
+const (
+	letters  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	defUrl   = "http://localhost:8080/"
+	idLength = 16
+)
 
 type Service struct {
 	store *storage.MemoryStorage
@@ -42,7 +45,7 @@ func (s *Service) GetLongUrl(key string) (longUrl string, ok bool) {
 func randomString() string {
 	var key strings.Builder
 
-	for i := 0; i < 16; i++ {
+	for i := 0; i < idLength; i++ {
 		index := rand.IntN(len(letters))
 		key.WriteByte(letters[index])
 	}

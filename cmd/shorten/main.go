@@ -1,25 +1,30 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/naumovMaksim/short-url_go/internal/handlers"
 	"github.com/naumovMaksim/short-url_go/internal/service"
 	"github.com/naumovMaksim/short-url_go/internal/storage"
 )
 
 func main() {
-	if err := run(); err != nil {
-		panic(err)
-	}
+	log.Fatal(http.ListenAndServe(":8080", router()))
 }
 
-func run() error {
+func router() http.Handler {
 	store := storage.NewMemoryStorage()
 	serv := service.NewService(store)
 	handler := handlers.NewHandler(serv)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler.DefaultHandler)
-	return http.ListenAndServe(`:8080`, mux)
+	r := chi.NewRouter()
+
+	r.Route("/", func(r chi.Router) {
+		r.Get("/{id}", handler.GetHandler)
+		r.Post("/", handler.AddHandler)
+	})
+
+	return r
 }

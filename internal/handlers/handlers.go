@@ -4,7 +4,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/naumovMaksim/short-url_go/internal/service"
+)
+
+const (
+	idLength = 16
 )
 
 type Handler struct {
@@ -17,23 +22,7 @@ func NewHandler(s *service.Service) *Handler {
 	}
 }
 
-func (h *Handler) DefaultHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		h.AddHandler(w, r)
-	case http.MethodGet:
-		h.GetHandler(w, r)
-	default:
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-	}
-}
-
 func (h *Handler) AddHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.Error(w, "Path not allowed", http.StatusBadRequest)
-		return
-	}
-
 	body, err := io.ReadAll(r.Body)
 
 	if err != nil {
@@ -41,7 +30,7 @@ func (h *Handler) AddHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(body) <= 0 {
+	if len(body) == 0 {
 		http.Error(w, "Empty body", http.StatusBadRequest)
 		return
 	}
@@ -53,16 +42,9 @@ func (h *Handler) AddHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetHandler(w http.ResponseWriter, r *http.Request) {
-	urlPath := r.URL.Path
+	id := chi.URLParam(r, "id")
 
-	if len(urlPath) < 2 {
-		http.Error(w, "Path not allowed", http.StatusBadRequest)
-		return
-	}
-
-	id := urlPath[1:]
-
-	if len(id) < 16 {
+	if len(id) < idLength {
 		http.Error(w, "Wrong id", http.StatusBadRequest)
 		return
 	}
