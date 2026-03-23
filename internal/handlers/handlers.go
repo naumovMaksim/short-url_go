@@ -23,6 +23,11 @@ func NewHandler(s *service.Service) *Handler {
 }
 
 func (h *Handler) AddHandler(w http.ResponseWriter, r *http.Request) {
+	if len(r.URL.Path) != 1 {
+		http.Error(w, "Wrong path", http.StatusBadRequest)
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 
 	if err != nil {

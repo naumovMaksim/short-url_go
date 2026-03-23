@@ -3,9 +3,10 @@ package handlers_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-resty/resty/v2"
 	"github.com/naumovMaksim/short-url_go/internal/handlers"
 	"github.com/naumovMaksim/short-url_go/internal/service"
 	"github.com/naumovMaksim/short-url_go/internal/storage"
@@ -13,6 +14,16 @@ import (
 )
 
 func TestHandler_AddHandler(t *testing.T) {
+	store := storage.NewMemoryStorage()
+	service := service.NewService(store)
+	h := handlers.NewHandler(service)
+
+	r := chi.NewRouter()
+	r.Post("/", h.AddHandler)
+
+	srv := httptest.NewServer(r)
+	defer srv.Close()
+
 	type want struct {
 		contentType    string
 		statusCode     int
@@ -39,7 +50,7 @@ func TestHandler_AddHandler(t *testing.T) {
 			request: "/test",
 			longUrl: "https://www.google.com/",
 			want: want{
-				statusCode: http.StatusBadRequest,
+				statusCode: http.StatusNotFound,
 			},
 		},
 		{
@@ -53,27 +64,38 @@ func TestHandler_AddHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := storage.NewMemoryStorage()
-			service := service.NewService(store)
-			h := handlers.NewHandler(service)
+			req := resty.New().R()
+			req.Method = http.MethodPost
+			req.SetBody(tt.longUrl)
+			req.URL = srv.URL + tt.request
 
-			r := httptest.NewRequest(http.MethodPost, tt.request, strings.NewReader(tt.longUrl))
-			w := httptest.NewRecorder()
+			resp, err := req.Send()
+			assert.NoError(t, err, "error while creating http method")
 
-			h.AddHandler(w, r)
-
-			assert.Equal(t, tt.want.statusCode, w.Code, "Wrong response code")
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode(), "Wrong response code")
 
 			if tt.want.statusCode == http.StatusCreated {
-				assert.Equal(t, tt.want.contentType, w.Header().Get("Content-Type"), "Wrong content type")
-				assert.NotEmpty(t, w.Body.String(), "Body is empty")
-				assert.Contains(t, w.Body.String(), tt.want.shortUrlPrefix, "Body dose not contain http://localhost:8080/")
+				assert.Equal(t, tt.want.contentType, resp.Header().Get("Content-Type"), "Wrong content type")
+				assert.NotEmpty(t, string(resp.Body()), "Body is empty")
+				assert.Contains(t, string(resp.Body()), tt.want.shortUrlPrefix, "Body dose not contain http://localhost:8080/")
 			}
 		})
 	}
 }
 
 func TestHandler_GetHandler(t *testing.T) {
+	store := storage.NewMemoryStorage()
+	store.Set("Fpfrew35gbniufmh", "https://www.google.com/")
+	service := service.NewService(store)
+	h := handlers.NewHandler(service)
+
+	r := chi.NewRouter()
+	r.Get("/{id}", h.GetHandler)
+	r.Get("/", h.GetHandler)
+
+	srv := httptest.NewServer(r)
+	defer srv.Close()
+
 	type want struct {
 		statusCode int
 		longUrl    string
@@ -115,19 +137,18 @@ func TestHandler_GetHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := storage.NewMemoryStorage()
-			store.Set("Fpfrew35gbniufmh", "https://www.google.com/")
-			service := service.NewService(store)
-			h := handlers.NewHandler(service)
+			client := resty.New()
+			client.SetRedirectPolicy(resty.NoRedirectPolicy())
 
-			r := httptest.NewRequest(http.MethodGet, tt.request, nil)
-			w := httptest.NewRecorder()
+			req := client.R()
+			req.Method = http.MethodGet
+			req.URL = srv.URL + tt.request
 
-			h.GetHandler(w, r)
+			resp, _ := req.Send()
 
-			assert.Equal(t, tt.want.statusCode, w.Code)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode())
 			if tt.want.statusCode == http.StatusTemporaryRedirect {
-				assert.Equal(t, tt.want.longUrl, w.Header().Get("Location"))
+				assert.Equal(t, tt.want.longUrl, resp.Header().Get("Location"))
 			}
 		})
 	}
