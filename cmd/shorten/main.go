@@ -5,18 +5,21 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/naumovMaksim/short-url_go/internal/config"
 	"github.com/naumovMaksim/short-url_go/internal/handlers"
 	"github.com/naumovMaksim/short-url_go/internal/service"
 	"github.com/naumovMaksim/short-url_go/internal/storage"
 )
 
 func main() {
-	log.Fatal(http.ListenAndServe(":8080", router()))
+	conf := config.ParseFlags()
+	handler := router(conf)
+	log.Fatal(http.ListenAndServe(conf.ServerAddress, handler))
 }
 
-func router() http.Handler {
+func router(conf *config.Config) http.Handler {
 	store := storage.NewMemoryStorage()
-	serv := service.NewService(store)
+	serv := service.NewService(store, conf)
 	handler := handlers.NewHandler(serv)
 
 	r := chi.NewRouter()

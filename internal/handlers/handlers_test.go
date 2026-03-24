@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-resty/resty/v2"
+	"github.com/naumovMaksim/short-url_go/internal/config"
 	"github.com/naumovMaksim/short-url_go/internal/handlers"
 	"github.com/naumovMaksim/short-url_go/internal/service"
 	"github.com/naumovMaksim/short-url_go/internal/storage"
@@ -14,8 +15,12 @@ import (
 )
 
 func TestHandler_AddHandler(t *testing.T) {
+	conf := &config.Config{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080/",
+	}
 	store := storage.NewMemoryStorage()
-	service := service.NewService(store)
+	service := service.NewService(store, conf)
 	h := handlers.NewHandler(service)
 
 	r := chi.NewRouter()
@@ -84,9 +89,13 @@ func TestHandler_AddHandler(t *testing.T) {
 }
 
 func TestHandler_GetHandler(t *testing.T) {
+	conf := &config.Config{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080/",
+	}
 	store := storage.NewMemoryStorage()
 	store.Set("Fpfrew35gbniufmh", "https://www.google.com/")
-	service := service.NewService(store)
+	service := service.NewService(store, conf)
 	h := handlers.NewHandler(service)
 
 	r := chi.NewRouter()

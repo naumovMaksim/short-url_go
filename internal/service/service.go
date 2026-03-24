@@ -4,22 +4,24 @@ import (
 	"math/rand/v2"
 	"strings"
 
+	"github.com/naumovMaksim/short-url_go/internal/config"
 	"github.com/naumovMaksim/short-url_go/internal/storage"
 )
 
 const (
 	letters  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	defUrl   = "http://localhost:8080/"
 	idLength = 16
 )
 
 type Service struct {
-	store *storage.MemoryStorage
+	store   *storage.MemoryStorage
+	baseURL string
 }
 
-func NewService(s *storage.MemoryStorage) *Service {
+func NewService(s *storage.MemoryStorage, c *config.Config) *Service {
 	return &Service{
-		store: s,
+		store:   s,
+		baseURL: c.BaseURL,
 	}
 }
 
@@ -34,7 +36,7 @@ func (s *Service) CreateShortUrl(url string) string {
 	}
 
 	s.store.Set(key, url)
-	return defUrl + key
+	return s.baseURL + "/" + key
 }
 
 func (s *Service) GetLongUrl(key string) (longUrl string, ok bool) {
