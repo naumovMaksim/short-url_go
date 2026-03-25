@@ -2,7 +2,7 @@ package config
 
 import (
 	"flag"
-	"fmt"
+	"os"
 )
 
 const (
@@ -16,17 +16,29 @@ type Config struct {
 }
 
 func ParseFlags() *Config {
-	conf := Config{}
-	flag.StringVar(&conf.ServerAddress, "a", baseServerAdress, "http server adress")
-	flag.StringVar(&conf.BaseURL, "b", baseUrl, "URL adress to return")
+	conf := &Config{}
+
+	flag.StringVar(&conf.ServerAddress, "a", baseServerAdress, "address and port to run server")
+	flag.StringVar(&conf.BaseURL, "b", baseUrl, "base address for shortened URL")
 
 	flag.Parse()
-	if conf.BaseURL != baseUrl || conf.ServerAddress != baseServerAdress {
-		if conf.ServerAddress != baseServerAdress && conf.BaseURL == baseUrl {
-			newBaseUrl := "http://" + conf.ServerAddress
-			conf.BaseURL = newBaseUrl
-		}
-		fmt.Printf("Server started on %v, and will return %v", conf.ServerAddress, conf.BaseURL)
+
+	serverAddressFromEnv := os.Getenv("SERVER_ADDRESS")
+	baseURLFromEnv := os.Getenv("BASE_URL")
+
+	if serverAddressFromEnv != "" {
+		conf.ServerAddress = serverAddressFromEnv
 	}
-	return &conf
+
+	if baseURLFromEnv != "" {
+		conf.BaseURL = baseURLFromEnv
+	}
+
+	if conf.ServerAddress != baseServerAdress &&
+		conf.BaseURL == baseUrl &&
+		baseURLFromEnv == "" {
+		conf.BaseURL = "http://" + conf.ServerAddress
+	}
+
+	return conf
 }
